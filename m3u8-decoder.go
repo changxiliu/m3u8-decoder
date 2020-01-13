@@ -1,6 +1,7 @@
 package m3u8_decoder
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -23,11 +24,16 @@ type M3u8 struct {
 type M3u8Decoder struct {
 	fn      func() (string, error)
 	m3u8Url string
+	context.Context
 }
 
 func NewM3u8Decoder(fn func() (string, error)) *M3u8Decoder {
 	m3u8Url, _ := fn()
 	return &M3u8Decoder{m3u8Url: m3u8Url, fn: fn}
+}
+
+func (decoder *M3u8Decoder) WithContext(ctx context.Context) *M3u8Decoder {
+	return &M3u8Decoder{m3u8Url: decoder.m3u8Url, fn: decoder.fn, Context: ctx}
 }
 
 func (decoder *M3u8Decoder) refresh() error {
@@ -115,21 +121,25 @@ func (decoder *M3u8Decoder) Decode() (M3u8, error) {
 	return m3u8, nil
 }
 
-func (decoder *M3u8Decoder) StartDecode(callback func(string) error) {
-	go func() {
-		for {
+func (decoder *M3u8Decoder) StartDecode(callback func(string) error) error {
+	for {
+		select {
+		case <-decoder.Context.Done():
+			return nil
+		default:
 			m3u8, err := decoder.Decode()
 			if err != nil {
 				decoder.refresh()
-				continue
+			} else {
+				var totalTime time.Duration
+				for _, v := range m3u8.TSList {
+					go callback(v.Url)
+					totalTime = totalTime + v.Duration
+				}
+				time.Sleep(totalTime)
 			}
-
-			var totalTime time.Duration
-			for _, v := range m3u8.TSList {
-				go callback(v.Url)
-				totalTime = totalTime + v.Duration
-			}
-			time.Sleep(totalTime)
 		}
-	}()
+	}
+
+	return nil
 }

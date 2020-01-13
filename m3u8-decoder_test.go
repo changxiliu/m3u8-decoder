@@ -1,9 +1,11 @@
 package m3u8_decoder_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	m3u8_decoder "github.com/changxiliu/m3u8-decoder"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -51,7 +53,15 @@ func m3u8DecodeCallback(tsUrl string) error {
 }
 
 func TestNewM3u8Decoder(t *testing.T) {
-	m3u8_decoder.NewM3u8Decoder(GetM3u8Url).StartDecode(m3u8DecodeCallback)
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	go func() {
+		err := m3u8_decoder.NewM3u8Decoder(GetM3u8Url).WithContext(ctx).StartDecode(m3u8DecodeCallback)
+		require.NoError(t, err)
+		fmt.Println("StartDecode end")
+	}()
+	time.Sleep(time.Second * 30)
+	cancelFunc()
+
 	for {
 		time.Sleep(time.Second)
 	}
