@@ -10,8 +10,10 @@ import (
 )
 
 type M3u8Ts struct {
-	Url      string
-	Duration time.Duration
+	Url       string
+	Duration  time.Duration
+	StartTime time.Time
+	EndTime   time.Time
 }
 
 type M3u8 struct {
@@ -117,11 +119,16 @@ func (decoder *M3u8Decoder) Decode() (M3u8, error) {
 			m3u8.TSList = append(m3u8.TSList, m3u8Ts)
 		}
 	}
-
+	curTime := time.Now()
+	for i := len(m3u8.TSList) - 1; i >= 0; i-- {
+		m3u8.TSList[i].EndTime = curTime
+		m3u8.TSList[i].StartTime = curTime.Add(-1 * m3u8.TSList[i].Duration)
+		curTime = curTime.Add(-1 * m3u8.TSList[i].Duration)
+	}
 	return m3u8, nil
 }
 
-func (decoder *M3u8Decoder) StartDecode(callback func(string) error) error {
+func (decoder *M3u8Decoder) StartDecode(callback func(M3u8Ts) error) error {
 	for {
 		select {
 		case <-decoder.Context.Done():
@@ -133,7 +140,7 @@ func (decoder *M3u8Decoder) StartDecode(callback func(string) error) error {
 			} else {
 				var totalTime time.Duration
 				for _, v := range m3u8.TSList {
-					go callback(v.Url)
+					go callback(v)
 					totalTime = totalTime + v.Duration
 				}
 				time.Sleep(totalTime)

@@ -47,8 +47,8 @@ func GetM3u8Url() (string, error) {
 	return urlUrl.String(), err
 }
 
-func m3u8DecodeCallback(tsUrl string) error {
-	fmt.Println(tsUrl)
+func m3u8DecodeCallback(ts m3u8_decoder.M3u8Ts) error {
+	fmt.Println(ts)
 	return nil
 }
 
