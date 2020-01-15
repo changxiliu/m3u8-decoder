@@ -73,6 +73,9 @@ func (decoder *M3u8Decoder) Decode() (M3u8, error) {
 		return M3u8{}, err
 	}
 
+	if content == "" {
+		return M3u8{}, decoder.refresh()
+	}
 	kvList := strings.Split(content, "#")
 
 	var newKvList []string
