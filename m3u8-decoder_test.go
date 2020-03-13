@@ -2,53 +2,19 @@ package m3u8_decoder_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	m3u8_decoder "github.com/changxiliu/m3u8-decoder"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
 	"testing"
 	"time"
 )
 
-type LiveUrl struct {
-	LiveUrl string `json:"liveUrl"`
-}
-
 func GetM3u8Url() (string, error) {
-	resp, err := http.Get("") // TODO fix
-	if err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var liveUrl LiveUrl
-	err = json.Unmarshal(body, &liveUrl)
-	if err != nil {
-		return "", err
-	}
-
-	m3u8Url := liveUrl.LiveUrl
-
-	urlUrl, err := url.Parse(m3u8Url)
-	if err != nil {
-		return "", err
-	}
-
-	port := strings.Split(urlUrl.Host, ":")[1]
-	urlUrl.Host = "119.3.175.106" + ":" + port
-	return urlUrl.String(), err
+	return "https://bp1.dkkomo.com/stream/full/japan/3000/heyzo_2166.m3u8", nil
 }
 
-func m3u8DecodeCallback(ts m3u8_decoder.M3u8Ts) error {
-	fmt.Println(ts)
+func m3u8DecodeCallback(m3u8Ts m3u8_decoder.M3u8Ts) error {
+	fmt.Println(m3u8Ts.Url)
 	return nil
 }
 

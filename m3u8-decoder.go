@@ -21,6 +21,7 @@ type M3u8 struct {
 	TSList         []M3u8Ts
 	MediaSequence  int
 	TargetDuration int
+	ExtXEndList    bool
 }
 
 type M3u8Decoder struct {
@@ -120,6 +121,8 @@ func (decoder *M3u8Decoder) Decode() (M3u8, error) {
 				}
 			}
 			m3u8.TSList = append(m3u8.TSList, m3u8Ts)
+		case "EXT-X-ENDLIST":
+			m3u8.ExtXEndList = true
 		}
 	}
 	curTime := time.Now()
@@ -143,8 +146,11 @@ func (decoder *M3u8Decoder) StartDecode(callback func(M3u8Ts) error) error {
 			} else {
 				var totalTime time.Duration
 				for _, v := range m3u8.TSList {
-					go callback(v)
+					callback(v)
 					totalTime = totalTime + v.Duration
+				}
+				if m3u8.ExtXEndList {
+					return nil
 				}
 				time.Sleep(totalTime)
 			}
