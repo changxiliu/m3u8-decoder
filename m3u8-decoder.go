@@ -92,9 +92,6 @@ func (decoder *M3u8Decoder) Decode() (M3u8, error) {
 	var m3u8 M3u8
 	for _, v := range newKvList {
 		kv := strings.Split(v, ":")
-		if len(kv) != 2 {
-			continue
-		}
 
 		switch kv[0] {
 		case "EXT-X-VERSION":
